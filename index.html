@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mahjong Empire Mini App</title>
+    <!-- Script resmi Telegram WebApp -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        h1 { color: #f59e0b; font-size: 24px; margin-bottom: 5px; }
+        .balance-box {
+            background: #334155;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 18px;
+        }
+        .slot-machine {
+            font-size: 40px;
+            background: #0f172a;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            letter-spacing: 10px;
+            border: 2px solid #f59e0b;
+        }
+        button {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+            transition: 0.2s;
+        }
+        button:active { transform: scale(0.98); }
+        .log-result {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #38bdf8;
+            min-height: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🀄 MAHJONG EMPIRE</h1>
+        <p style="font-size: 12px; color: #94a3b8;">High Stakes Telegram Mini App</p>
+
+        <div class="balance-box">
+            Saldo Kamu: <span id="userBalance" style="color: #4ade80; font-weight: bold;">Rp 50.000</span>
+        </div>
+
+        <div class="slot-machine" id="tiles">
+            🀄 🀫 🀄
+        </div>
+
+        <button onclick="spinMahjong()">PUTAR MEJA (Rp 15.000)</button>
+
+        <div class="log-result" id="logResult">
+            Tekan tombol putar untuk mulai menyusun ubin emas!
+        </div>
+    </div>
+
+    <script>
+        // Inisialisasi Telegram WebApp
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Memperbesar tampilan web app secara penuh di Telegram
+
+        let currentBalance = 50000; // Simulasi saldo awal (nanti bisa diambil dari database MongoDB via API bot)
+
+        function spinMahjong() {
+            const cost = 15000;
+            const logEl = document.getElementById('logResult');
+            const tilesEl = document.getElementById('tiles');
+            const balanceEl = document.getElementById('userBalance');
+
+            if (currentBalance < cost) {
+                logEl.innerHTML = "❌ Saldo tidak cukup untuk memutar meja!";
+                return;
+            }
+
+            currentBalance -= cost;
+            balanceEl.innerText = "Rp " + currentBalance.toLocaleString('id-ID');
+            logEl.innerHTML = "⏳ Mengocok ubin Mahjong...";
+            tilesEl.innerText = "🔄 🔄 🔄";
+
+            setTimeout(() => {
+                const prizes = [
+                    { display: "🐉 🐉 🐉", name: "MEGA JACKPOT NAGA EMAS! (+Rp 300.000)", reward: 300000 },
+                    { display: "🀄 🀄 🀄", name: "Scatter Sempurna! (+Rp 75.000)", reward: 75000 },
+                    { display: "✨ 🀫 ✨", name: "Kemenangan Besar (+Rp 30.000)", reward: 30000 },
+                    { display: "❌ 🀫 ❌", name: "Angin Berlalu (Rugi)", reward: 0 }
+                ];
+
+                const result = prizes[Math.floor(Math.random() * prizes.length)];
+                currentBalance += result.reward;
+
+                tilesEl.innerText = result.display;
+                balanceEl.innerText = "Rp " + currentBalance.toLocaleString('id-ID');
+                logEl.innerHTML = `🎉 <b>${result.name}</b>`;
+                
+                // Beri efek getar kecil lewat Telegram API jika didukung perangkat
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
