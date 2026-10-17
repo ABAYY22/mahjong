@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mahjong Ways 5x5 - Free Spin Edition</title>
+    <title>Mahjong Ways 5x5 - MongoDB Connected</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
@@ -29,14 +29,14 @@
             box-shadow: 0 15px 35px rgba(236, 72, 153, 0.3);
             backdrop-filter: blur(10px);
         }
-        h1 { color: #f472b6; font-size: 20px; margin: 3px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        h1 { color: #f472b6; font-size: 19px; margin: 3px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         .info-panel {
             display: flex;
             justify-content: space-between;
             background: rgba(30, 41, 59, 0.8);
             padding: 6px 10px;
             border-radius: 8px;
-            margin: 8px 0;
+            margin: 6px 0;
             border: 1px solid #db2777;
             font-size: 12px;
         }
@@ -47,7 +47,33 @@
             border-radius: 5px;
             font-weight: bold;
         }
-        /* Grid Slot 5x5 (25 Kotak) */
+        .bet-control-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(30, 41, 59, 0.9);
+            padding: 6px 10px;
+            border-radius: 8px;
+            margin: 8px 0;
+            border: 1px solid #475569;
+        }
+        .bet-btn-pm {
+            background: linear-gradient(135deg, #475569, #1e293b);
+            color: white;
+            border: 1px solid #94a3b8;
+            width: 38px;
+            height: 34px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .bet-btn-pm:active { transform: scale(0.92); background: #db2777; }
+        .bet-display {
+            font-size: 14px;
+            font-weight: bold;
+            color: #facc15;
+        }
         .slot-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -56,7 +82,7 @@
             padding: 10px;
             border-radius: 12px;
             border: 2px solid #be185d;
-            margin: 10px 0;
+            margin: 8px 0;
         }
         .tile {
             background: linear-gradient(145deg, #fdfbf7, #cbd5e1);
@@ -66,15 +92,12 @@
             border-radius: 6px;
             box-shadow: inset 0 1px 3px rgba(255,255,255,0.8), 0 2px 4px rgba(0,0,0,0.4);
             border: 1.5px solid #94a3b8;
-            transition: transform 0.1s;
         }
-        /* Ubin Emas */
         .tile.gold {
             background: linear-gradient(145deg, #fef08a, #eab308);
             border-color: #ca8a04;
             box-shadow: 0 0 10px rgba(234, 179, 8, 0.8);
         }
-        /* Simbol Scatter Khusus (Amplop Merah) */
         .tile.scatter {
             background: linear-gradient(145deg, #fee2e2, #ef4444);
             border-color: #dc2626;
@@ -85,7 +108,7 @@
             color: white;
             border: 2px solid #fbcfe8;
             padding: 12px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             border-radius: 10px;
             cursor: pointer;
@@ -97,25 +120,32 @@
         button.spin-btn:active { transform: scale(0.96); }
         .log-result {
             margin-top: 8px;
-            font-size: 12px;
+            font-size: 11px;
             color: #38bdf8;
-            min-height: 30px;
+            min-height: 28px;
             font-weight: 500;
         }
     </style>
 </head>
 <body>
     <div class="slot-container">
-        <h1>🀄 MAHJONG WAYS 5X5 FREE SPINS</h1>
-        <div style="font-size: 10px; color: #94a3b8; margin-bottom: 3px;">Bandar Mode: Strict RTP + Free Spin Bonus</div>
-
+        <h1>🀄 MAHJONG WAYS 5X5</h1>
+        
         <div class="info-panel">
-            <div>Saldo: <span id="userBalance" style="color: #4ade80; font-weight: bold;">Rp 50.000</span></div>
+            <div>Saldo: <span id="userBalance" style="color: #4ade80; font-weight: bold;">Memuat...</span></div>
             <div>Free Spin: <span id="freeSpinCount" style="color: #60a5fa; font-weight: bold;">0</span></div>
             <div>Multi: <span id="multiplier" class="multiplier-badge">1x</span></div>
         </div>
 
-        <!-- Grid Slot 5x5 -->
+        <div class="bet-control-panel">
+            <button class="bet-btn-pm" onclick="adjustBet(-1)">-</button>
+            <div>
+                <div style="font-size: 9px; color: #94a3b8;">NILAI TARUHAN (BET)</div>
+                <div class="bet-display" id="betDisplay">Rp 400</div>
+            </div>
+            <button class="bet-btn-pm" onclick="adjustBet(1)">+</button>
+        </div>
+
         <div class="slot-grid" id="slotGrid">
             <script>
                 let defHtml = '';
@@ -124,10 +154,10 @@
             </script>
         </div>
 
-        <button class="spin-btn" id="spinButton" onclick="spinSlot()">PUTAR (BET Rp 10.000)</button>
+        <button class="spin-btn" id="spinButton" onclick="spinSlot()">MEMUAT DATABASE...</button>
 
         <div class="log-result" id="logResult">
-            Dapatkan 3 Scatter (🧧) untuk memicu 10x Free Spin & Perkalian 2x!
+            Menghubungkan ke MongoDB Bot...
         </div>
     </div>
 
@@ -135,25 +165,60 @@
         let tg = window.Telegram.WebApp;
         tg.expand();
 
-        let currentBalance = 50000;
+        let telegramId = tg.initDataUnsafe?.user?.id ? tg.initDataUnsafe.user.id.toString() : "123456789";
+
+        // Link domain Pterodactyl kamu yang terhubung ke server Express bot
+        const apiUrl = "https://anoshentai.shopryzen.my.id/api/game";
+
+        let currentBalance = 0;
         let currentMultiplier = 1;
         let freeSpinsLeft = 0;
+
+        const betLevels = [400, 800, 1200, 2000, 4000, 10000, 20000, 50000];
+        let betIndex = 0;
 
         const symbols = ["🀄", "🐉", "🀫", "🀀", "🀁", "🀂", "🀃", "🀄", "🐉"];
         const scatterSymbol = "🧧";
 
-        function spinSlot() {
-            const bet = 10000;
+        async function fetchBalance() {
+            try {
+                let res = await fetch(`${apiUrl}?telegramId=${telegramId}`);
+                let data = await res.json();
+                if (data.success) {
+                    currentBalance = data.balance;
+                    document.getElementById('userBalance').innerText = "Rp " + currentBalance.toLocaleString('id-ID');
+                    document.getElementById('spinButton').innerText = `PUTAR (BET Rp ${betLevels[betIndex].toLocaleString('id-ID')})`;
+                    document.getElementById('logResult').innerText = "Berhasil terhubung ke MongoDB Atlas!";
+                } else {
+                    document.getElementById('logResult').innerText = "❌ Gagal memuat saldo.";
+                }
+            } catch (e) {
+                console.error(e);
+                document.getElementById('logResult').innerText = "❌ Gangguan koneksi ke bot.";
+            }
+        }
+
+        fetchBalance();
+
+        function adjustBet(direction) {
+            if (freeSpinsLeft > 0) return;
+            betIndex += direction;
+            if (betIndex < 0) betIndex = 0;
+            if (betIndex >= betLevels.length) betIndex = betLevels.length - 1;
+
+            let activeBet = betLevels[betIndex];
+            document.getElementById('betDisplay').innerText = "Rp " + activeBet.toLocaleString('id-ID');
+            document.getElementById('spinButton').innerText = `PUTAR (BET Rp ${activeBet.toLocaleString('id-ID')})`;
+        }
+
+        async function spinSlot() {
+            let currentBet = betLevels[betIndex];
+            let isFreeSpinActive = freeSpinsLeft > 0;
             const logEl = document.getElementById('logResult');
             const balanceEl = document.getElementById('userBalance');
-            const gridEl = document.getElementById('slotGrid');
-            const btnEl = document.getElementById('spinButton');
 
-            let isFreeSpinActive = freeSpinsLeft > 0;
-
-            // Jika bukan mode free spin, potong saldo
-            if (!isFreeSpinActive && currentBalance < bet) {
-                logEl.innerHTML = "❌ Saldo tidak cukup, bos! Yuk top-up dulu.";
+            if (!isFreeSpinActive && currentBalance < currentBet) {
+                logEl.innerHTML = "❌ Saldo tidak cukup! Yuk top-up dulu.";
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
                 return;
             }
@@ -161,12 +226,6 @@
             if (isFreeSpinActive) {
                 freeSpinsLeft--;
                 document.getElementById('freeSpinCount').innerText = freeSpinsLeft;
-                btnEl.innerText = `PUTAR GRATIS (${freeSpinsLeft})`;
-                logEl.innerHTML = `🎁 <b>FREE SPIN BERJALAN!</b> Sisa putaran: ${freeSpinsLeft}`;
-            } else {
-                currentBalance -= bet;
-                balanceEl.innerText = "Rp " + currentBalance.toLocaleString('id-ID');
-                logEl.innerHTML = "🔄 Mengocok 25 ubin di meja bandar...";
             }
 
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
@@ -178,29 +237,25 @@
                     let randSym = symbols[Math.floor(Math.random() * symbols.length)];
                     htmlContent += `<div class="tile">${randSym}</div>`;
                 }
-                gridEl.innerHTML = htmlContent;
+                document.getElementById('slotGrid').innerHTML = htmlContent;
                 counter++;
 
                 if(counter > 7) {
                     clearInterval(spinInterval);
-                    finalizeSpin(isFreeSpinActive);
+                    processGameResult(isFreeSpinActive, currentBet);
                 }
             }, 70);
         }
 
-        function finalizeSpin(isFreeSpinActive) {
+        async function processGameResult(isFreeSpinActive, currentBet) {
             const logEl = document.getElementById('logResult');
             const balanceEl = document.getElementById('userBalance');
-            const gridEl = document.getElementById('slotGrid');
-            const btnEl = document.getElementById('spinButton');
-
             let randRoll = Math.random();
             let reward = 0;
             let message = "";
             let tileClasses = [];
 
             for(let i=0; i<25; i++) {
-                // Peluang scatter (dibuat agak jarang agar eksklusif)
                 let isScatter = Math.random() < 0.05;
                 let sym = isScatter ? scatterSymbol : symbols[Math.floor(Math.random() * symbols.length)];
                 let isGold = (!isScatter && Math.random() < 0.15) ? 'gold' : '';
@@ -208,41 +263,49 @@
                 tileClasses.push({sym, cssClass});
             }
 
-            // Hitung jumlah scatter yang muncul di grid
             let scattersFound = tileClasses.filter(t => t.sym === scatterSymbol).length;
 
-            // JIKA DAPAT 3 SCATTER ATAU LEBIH -> PICU 10x FREE SPIN + PERKALIAN 2x
             if (scattersFound >= 3) {
                 freeSpinsLeft += 10;
-                currentMultiplier *= 2; // Perkalian dilipat ganda 2x
+                currentMultiplier *= 2;
                 document.getElementById('freeSpinCount').innerText = freeSpinsLeft;
                 document.getElementById('multiplier').innerText = currentMultiplier + "x";
-                
-                message = `🎉 JACKPOT SCATTER! +10x Free Spin & Perkalian Naik jadi ${currentMultiplier}x!`;
+                message = `🎉 JACKPOT SCATTER! +10x Free Spin & Perkalian Naik ${currentMultiplier}x!`;
                 reward = 0;
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             } else {
-                // Logika RTP normal / saat Free Spin
-                // Jika sedang Free Spin, peluang menang dinaikkan sedikit agar pemain senang
                 let winChanceMultiplier = isFreeSpinActive ? 2.5 : 1; 
 
                 if (randRoll < (0.04 * winChanceMultiplier)) {
-                    reward = 25000 * currentMultiplier;
-                    message = `✨ Kemenangan Besar di Free Spin! Multiplier ${currentMultiplier}x`;
+                    reward = (currentBet * 3) * currentMultiplier;
+                    message = `✨ Mega Win! Menang Rp ${reward.toLocaleString('id-ID')}`;
                 } else if (randRoll < (0.20 * winChanceMultiplier)) {
-                    reward = 10000 * currentMultiplier;
-                    message = `🪙 Kemenangan Kombinasi Ubin Emas!`;
+                    reward = (currentBet * 1) * currentMultiplier;
+                    message = `🪙 Kemenangan Ubin Emas!`;
                 } else {
                     reward = 0;
-                    message = isFreeSpinActive ? `😢 Putaran gratis zonk. Lanjut!` : `💀 Rungkad! Saldo masuk ke bandar.`;
+                    message = isFreeSpinActive ? `😢 Putaran gratis zonk.` : `💀 Rungkad! Saldo masuk ke bandar.`;
                 }
             }
 
-            currentBalance += reward;
-            balanceEl.innerText = "Rp " + currentBalance.toLocaleString('id-ID');
-
-            if (freeSpinsLeft === 0) {
-                btnEl.innerText = "PUTAR (BET Rp 10.000)";
+            try {
+                let response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telegramId: telegramId,
+                        action: 'spin',
+                        bet: isFreeSpinActive ? 0 : currentBet,
+                        winAmount: reward
+                    })
+                });
+                let result = await response.json();
+                if (result.success) {
+                    currentBalance = result.balance;
+                    balanceEl.innerText = "Rp " + currentBalance.toLocaleString('id-ID');
+                }
+            } catch (err) {
+                console.error("Gagal update database:", err);
             }
 
             if (reward > 0) {
@@ -252,12 +315,11 @@
                 logEl.innerHTML = `<span style="color: #f87171;">${message}</span>`;
             }
 
-            // Render hasil akhir ke grid 5x5
             let finalHtml = '';
             for(let t of tileClasses) {
                 finalHtml += `<div class="tile ${t.cssClass}">${t.sym}</div>`;
             }
-            gridEl.innerHTML = finalHtml;
+            document.getElementById('slotGrid').innerHTML = finalHtml;
         }
     </script>
 </body>
